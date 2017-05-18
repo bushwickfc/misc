@@ -24,14 +24,17 @@ def matching(members, pos):
     matches = {}
     for key in list(members.keys()):
         if key in pos:
-            matches[members[key]['MEMBER NUMBER']] = pos[key]['ID']
+            matches[members[key]['MEMBER NUMBER']] = { 'pos': pos[key], 'member': members[key] }
     return matches
 
 def possible_match(matches, key):
     if key in matches:
-        return [key, matches[key]]
+        pos = matches[key]['pos']
+        member = matches[key]['member']
+        return [key, pos['ID'], pos['NAME'],
+                member['FIRST NAME'] + ' ' + member['LAST NAME']]
     else:
-        return ['','']
+        return ['','','','']
 
 with open(args.members, newline='') as members_file:
     with open(args.pos, newline='') as pos_file:
@@ -48,5 +51,12 @@ with open(args.members, newline='') as members_file:
             out = csv.writer(outfile)
             keys = sorted(matches.keys())
             max_key = keys[-1]
+            out.writerow(['MEMBER NUMBER', 'POS ID', 'POS NAME', 'MEMBER NAME'])
             [out.writerow(possible_match(matches, str(i)))
              for i in range(1, int(max_key)+1)]
+            out.writerow(['Non matching'])
+            out.writerow(['MEMBER NUMBER', 'FIRST NAME', 'LAST NAME'])
+            [out.writerow([members[key]['MEMBER NUMBER'],
+                          members[key]['FIRST NAME'],
+                           members[key]['LAST NAME']]) for key
+                          in nonmatching_members]
