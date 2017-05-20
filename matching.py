@@ -18,7 +18,7 @@ def member_key(m):
     return (m['FIRST NAME'] + m['LAST NAME']).lower().replace(" ", "")
 
 def pos_key(p):
-    return p['NAME'].split('//')[0].replace(" ", "").lower()
+    return (p['FIRSTNAME'] + p['LASTNAME']).replace(" ", "").lower()
 
 def matching(members, pos):
     matches = {}
@@ -60,3 +60,5 @@ with open(args.members, newline='') as members_file:
                           members[key]['FIRST NAME'],
                            members[key]['LAST NAME']]) for key
                           in nonmatching_members]
+        print("Non matching: ", len(nonmatching_members))
+        print("Matching: ", len(matches))
