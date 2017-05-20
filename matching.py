@@ -79,5 +79,6 @@ with open(args.members, newline='') as members_file:
                   m['FIRST NAME'] + ' ' + m['LAST NAME'],
                   p['FIRSTNAME'] + ' ' + p['LASTNAME'])
         [print_l_match(m_key, p_key) for (m_key, p_key) in l_matches]
-        print("Non matching: ", len(nonmatching_members))
-        print("Matching: ", len(matches))
+        print("Non matching:", len(nonmatching_members) - len(l_matches))
+        print("Matching:", len(matches))
+        print("L Matches:", len(l_matches))
