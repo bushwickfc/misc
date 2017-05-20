@@ -4,6 +4,8 @@ import argparse
 import csv
 import pprint
 
+import editdistance
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("members", help="members db csv")
@@ -31,10 +33,18 @@ def possible_match(matches, key):
     if key in matches:
         pos = matches[key]['pos']
         member = matches[key]['member']
-        return [key, pos['ID'], pos['NAME'],
-                member['FIRST NAME'] + ' ' + member['LAST NAME']]
+        return [key, pos['ID'],
+                member['FIRST NAME'] + ' ' + member['LAST NAME'],
+                pos['FIRSTNAME'] + pos['LASTNAME']]
     else:
         return ['','','','']
+
+def find_distance(non_matching, pos, distance):
+    keys = pos.keys()
+    for i in range(1, distance+1):
+        found = next((key for key in keys if editdistance.eval(non_matching, key) <= i), None)
+        if found:
+          return found
 
 with open(args.members, newline='') as members_file:
     with open(args.pos, newline='') as pos_file:
@@ -51,7 +61,7 @@ with open(args.members, newline='') as members_file:
             out = csv.writer(outfile)
             keys = sorted(matches.keys())
             max_key = keys[-1]
-            out.writerow(['MEMBER NUMBER', 'POS ID', 'POS NAME', 'MEMBER NAME'])
+            out.writerow(['MEMBER NUMBER', 'POS ID','MEMBER NAME', 'POS NAME'])
             [out.writerow(possible_match(matches, str(i)))
              for i in range(1, int(max_key)+1)]
             out.writerow(['Non matching'])
@@ -60,5 +70,14 @@ with open(args.members, newline='') as members_file:
                           members[key]['FIRST NAME'],
                            members[key]['LAST NAME']]) for key
                           in nonmatching_members]
+        l_matches = [x for x in [(key, find_distance(key, pos, 3))
+                     for key in nonmatching_members] if x[1]]
+        def print_l_match(m_key, p_key):
+            m = members[m_key]
+            p = pos[p_key]
+            print(m['MEMBER NUMBER'], p['ID'],
+                  m['FIRST NAME'] + ' ' + m['LAST NAME'],
+                  p['FIRSTNAME'] + ' ' + p['LASTNAME'])
+        [print_l_match(m_key, p_key) for (m_key, p_key) in l_matches]
         print("Non matching: ", len(nonmatching_members))
         print("Matching: ", len(matches))
