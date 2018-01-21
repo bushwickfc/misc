@@ -22,11 +22,16 @@ def member_key(m):
 def pos_key(p):
     return (p['FIRSTNAME'] + p['LASTNAME']).replace(" ", "").lower()
 
-def matching(members, pos):
+def pos_key_alternative(p):
+    return p['NAME'].split("//")[0].replace(" ","").lower()
+
+def matching(members, pos, pos_alt):
     matches = {}
     for key in list(members.keys()):
         if key in pos:
             matches[members[key]['MEMBER NUMBER']] = { 'pos': pos[key], 'member': members[key] }
+        elif key in pos_alt:
+            matches[members[key]['MEMBER NUMBER']] = { 'pos': pos_alt[key], 'member': members[key] }
     return matches
 
 def possible_match(matches, key):
@@ -49,17 +54,18 @@ def find_distance(non_matching, pos, distance):
 with open(args.members, newline='') as members_file:
     with open(args.pos, newline='') as pos_file:
         members_reader = csv.DictReader(members_file)
-        pos_reader = csv.DictReader(pos_file, delimiter='\t')
+        pos_reader = list(csv.DictReader(pos_file, delimiter='\t'))
         members = { member_key(m): m for m in members_reader }
         pos = { pos_key(p) : p for p in pos_reader }
-        matches = matching(members, pos)
+        pos_alt = { pos_key_alternative(p) : p for p in pos_reader }
+        matches = matching(members, pos, pos_alt)
         nonmatching_members = [key for key in list(members.keys())
                                if key not in pos]
         nonmatching_pos = [key for key in list(pos.keys())
                            if key not in members]
         with open(args.output, 'w', newline='') as outfile:
             out = csv.writer(outfile)
-            keys = sorted(matches.keys())
+            keys = sorted(map(int, matches.keys()))
             max_key = keys[-1]
             out.writerow(['MEMBER NUMBER', 'POS ID','MEMBER NAME', 'POS NAME'])
             [out.writerow(possible_match(matches, str(i)))
