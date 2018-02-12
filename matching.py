@@ -51,11 +51,17 @@ def find_distance(non_matching, pos, distance):
         if found:
           return found
 
+def add_idx(member, idx):
+    member['idx'] = idx
+    return member
+
 with open(args.members, newline='') as members_file:
     with open(args.pos, newline='') as pos_file:
         members_reader = csv.DictReader(members_file)
         pos_reader = list(csv.DictReader(pos_file, delimiter='\t'))
-        members = { member_key(m): m for m in members_reader }
+        members = [add_idx(m, idx) for idx, m in enumerate(members_reader)]
+        membKeys = [m['MEMBER NUMBER'] for m in members]
+        members = { member_key(m): m for m in members }
         pos = { pos_key(p) : p for p in pos_reader }
         pos_alt = { pos_key_alternative(p) : p for p in pos_reader }
         matches = matching(members, pos, pos_alt)
@@ -65,11 +71,9 @@ with open(args.members, newline='') as members_file:
                            if key not in members]
         with open(args.output, 'w', newline='') as outfile:
             out = csv.writer(outfile)
-            keys = sorted(map(int, matches.keys()))
-            max_key = keys[-1]
+            keys = sorted([int(k) for k in membKeys])
             out.writerow(['MEMBER NUMBER', 'POS ID','MEMBER NAME', 'POS NAME'])
-            [out.writerow(possible_match(matches, str(i)))
-             for i in range(1, int(max_key)+1)]
+            [out.writerow(possible_match(matches, str(i))) for i in keys]
             out.writerow(['Non matching'])
             out.writerow(['MEMBER NUMBER', 'FIRST NAME', 'LAST NAME'])
             [out.writerow([members[key]['MEMBER NUMBER'],
